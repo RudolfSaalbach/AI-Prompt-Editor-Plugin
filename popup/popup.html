@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Prompt Manager</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <h1 class="app-title">AI Prompt Manager</h1>
+    <div class="header-actions">
+      <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6m-9-9h6m6 0h6"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="tabs">
+    <button class="tab active" data-view="canvas">Canvas</button>
+    <button class="tab" data-view="prompts">Prompts</button>
+    <button class="tab" data-view="templates">Templates</button>
+    <button class="tab" data-view="drafts">Drafts</button>
+    <button class="tab" data-view="categories">Categories</button>
+    <button class="tab" data-view="tags">Tags</button>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="content content-wide">
+    
+    <!-- CANVAS VIEW (NEW in Slice 4) -->
+    <section id="view-canvas" class="view active">
+      <!-- Canvas Toolbar -->
+      <div class="canvas-toolbar">
+        <div class="canvas-actions-left">
+          <button id="btn-new-draft" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14m-7-7h14"></path>
+            </svg>
+            New Draft
+          </button>
+          <button id="btn-load-draft" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+            </svg>
+            Load
+          </button>
+          <button id="btn-save-draft" class="btn-secondary" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            Save
+          </button>
+        </div>
+        <div class="canvas-actions-right">
+          <button id="btn-canvas-settings" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M12 1v6m0 6v6"></path>
+            </svg>
+            Options
+          </button>
+          <button id="btn-copy-canvas" class="btn-primary btn-clipboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+            </svg>
+            Copy to Clipboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Layout: Sidebar + Editor -->
+      <div class="canvas-layout">
+        <!-- Parts Sidebar -->
+        <aside class="canvas-sidebar">
+          <div class="sidebar-header">
+            <h3>Parts</h3>
+            <button id="btn-add-part" class="icon-btn" title="Add Part">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14m-7-7h14"></path>
+              </svg>
+            </button>
+          </div>
+          <div id="canvas-parts-list" class="canvas-parts-list">
+            <!-- Dynamic parts list -->
+            <div class="empty-state-small">
+              <p>No parts yet</p>
+              <button class="btn-secondary-sm" id="btn-add-first-part">Add Prompt</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Canvas Editor -->
+        <div class="canvas-editor-container">
+          <div class="canvas-stats">
+            <span id="canvas-char-count">0 characters</span>
+            <span id="canvas-word-count">0 words</span>
+            <span id="canvas-part-count">0 parts</span>
+            <span id="canvas-token-estimate">~0 tokens</span>
+          </div>
+          <textarea 
+            id="canvas-editor" 
+            class="canvas-editor" 
+            placeholder="Select prompts to compose your megaprompt here...
+            
+You can:
+• Add prompts from your library
+• Insert framework templates (CRISE, CRAFT, TAG)
+• Reorder parts by drag & drop
+• Edit the composed text directly
+• Copy the final result to clipboard"
+          ></textarea>
+          
+          <div class="canvas-warnings" id="canvas-warnings" style="display:none;">
+            <!-- Dynamic warnings -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROMPTS VIEW (Existing from Slice 3) -->
+    <section id="view-prompts" class="view">
+      <div class="sticky-header">
+        <div class="search-box">
+          <input type="text" id="search-prompts" placeholder="Search prompts..." aria-label="Search prompts">
+        </div>
+        <select id="filter-category" aria-label="Filter by category">
+          <option value="">All Categories</option>
+        </select>
+        <label class="auto-filter-toggle">
+          <input type="checkbox" id="auto-filter-toggle-prompts">
+          <span>Auto-Filter</span>
+        </label>
+        <div id="profile-chips-prompts" class="profile-chips" style="display:none;"></div>
+        <button id="btn-add-prompt" class="btn-primary">+ New Prompt</button>
+      </div>
+
+      <div id="prompt-list" class="item-list"></div>
+      <div id="empty-prompts" class="empty-state" style="display:none;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p>No prompts yet</p>
+        <button id="btn-empty-create-prompt" class="btn-secondary">Create First Prompt</button>
+      </div>
+    </section>
+
+    <!-- TEMPLATES VIEW (NEW in Slice 4) -->
+    <section id="view-templates" class="view">
+      <div class="sticky-header">
+        <h2>Framework Templates</h2>
+        <button id="btn-add-custom-template" class="btn-primary">+ Custom Template</button>
+      </div>
+
+      <div class="templates-grid">
+        <!-- CRISE Framework -->
+        <div class="template-card" data-framework="CRISE">
+          <div class="template-header">
+            <h3>CRISE Framework</h3>
+            <span class="template-badge">Built-in</span>
+          </div>
+          <p class="template-description">Context, Role, Instruction, Samples, Evaluation</p>
+          <div class="template-variables">
+            <span class="var-chip required">context</span>
+            <span class="var-chip required">role</span>
+            <span class="var-chip required">instruction</span>
+            <span class="var-chip">samples</span>
+            <span class="var-chip">evaluation</span>
+          </div>
+          <div class="template-actions">
+            <button class="btn-secondary btn-use-template" data-framework="CRISE">Use Template</button>
+          </div>
+        </div>
+
+        <!-- CRAFT Framework -->
+        <div class="template-card" data-framework="CRAFT">
+          <div class="template-header">
+            <h3>CRAFT Framework</h3>
+            <span class="template-badge">Built-in</span>
+          </div>
+          <p class="template-description">Cut, Reframe, Add detail, Format, Test</p>
+          <div class="template-variables">
+            <span class="var-chip">cut</span>
+            <span class="var-chip required">reframe</span>
+            <span class="var-chip required">detail</span>
+            <span class="var-chip required">format</span>
+            <span class="var-chip">test</span>
+          </div>
+          <div class="template-actions">
+            <button class="btn-secondary btn-use-template" data-framework="CRAFT">Use Template</button>
+          </div>
+        </div>
+
+        <!-- TAG Framework -->
+        <div class="template-card" data-framework="TAG">
+          <div class="template-header">
+            <h3>TAG Framework</h3>
+            <span class="template-badge">Built-in</span>
+          </div>
+          <p class="template-description">Task, Audience, Goal</p>
+          <div class="template-variables">
+            <span class="var-chip required">task</span>
+            <span class="var-chip required">audience</span>
+            <span class="var-chip required">goal</span>
+          </div>
+          <div class="template-actions">
+            <button class="btn-secondary btn-use-template" data-framework="TAG">Use Template</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="custom-templates-list" class="item-list" style="margin-top: 24px;">
+        <!-- Custom templates dynamically rendered -->
+      </div>
+    </section>
+
+    <!-- DRAFTS VIEW (NEW in Slice 4) -->
+    <section id="view-drafts" class="view">
+      <div class="sticky-header">
+        <h2>Saved Drafts</h2>
+        <button id="btn-create-draft-from-view" class="btn-primary">+ New Draft</button>
+      </div>
+
+      <div id="drafts-list" class="item-list">
+        <!-- Drafts dynamically rendered -->
+      </div>
+
+      <div id="empty-drafts" class="empty-state" style="display:none;">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p>No drafts saved yet</p>
+        <button id="btn-empty-create-draft" class="btn-secondary">Create First Draft</button>
+      </div>
+    </section>
+
+    <!-- CATEGORIES VIEW (Existing) -->
+    <section id="view-categories" class="view">
+      <div class="sticky-header">
+        <button id="btn-add-category" class="btn-primary">+ New Category</button>
+      </div>
+      <div id="category-list" class="item-list"></div>
+      <div id="empty-categories" class="empty-state" style="display:none;">
+        <p>No categories yet</p>
+      </div>
+    </section>
+
+    <!-- TAGS VIEW (Existing) -->
+    <section id="view-tags" class="view">
+      <div class="sticky-header">
+        <button id="btn-add-tag" class="btn-primary">+ New Tag</button>
+        <button id="btn-add-profile" class="btn-secondary">+ New Profile</button>
+      </div>
+      <div class="subtabs">
+        <button class="subtab active" data-subtab="tags">Tags</button>
+        <button class="subtab" data-subtab="profiles">Profiles</button>
+      </div>
+      <div id="tag-list" class="item-list"></div>
+      <div id="profile-list" class="item-list" style="display:none;"></div>
+      <div id="empty-tags" class="empty-state" style="display:none;">
+        <p>No tags yet</p>
+      </div>
+      <div id="empty-profiles" class="empty-state" style="display:none;">
+        <p>No profiles yet</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODALS (Existing + New) -->
+  
+  <!-- Prompt Modal -->
+  <div id="modal-prompt" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-prompt-title">Edit Prompt</h2>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-prompt">
+          <div class="form-group">
+            <label for="prompt-title">Title *</label>
+            <input type="text" id="prompt-title" required>
+          </div>
+          <div class="form-group">
+            <label for="prompt-description">Description</label>
+            <input type="text" id="prompt-description">
+          </div>
+          <div class="form-group">
+            <label for="prompt-content">Content *</label>
+            <textarea id="prompt-content" rows="12" required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prompt-category">Category</label>
+              <select id="prompt-category">
+                <option value="">No Category</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="prompt-tags">Tags</label>
+              <div id="prompt-tags" class="tag-selector"></div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="prompt-profiles">Profiles</label>
+            <div id="prompt-profiles" class="tag-selector"></div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost modal-close">Cancel</button>
+            <button type="submit" class="btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div id="modal-category" class="modal">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2 id="modal-category-title">Category</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-category">
+          <div class="form-group">
+            <label for="category-name">Name *</label>
+            <input type="text" id="category-name" required>
+          </div>
+          <div class="form-group">
+            <label for="category-color">Color</label>
+            <input type="color" id="category-color" value="#3B82F6">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost modal-close">Cancel</button>
+            <button type="submit" class="btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tag Modal -->
+  <div id="modal-tag" class="modal">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2 id="modal-tag-title">Tag</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-tag">
+          <div class="form-group">
+            <label for="tag-name">Name *</label>
+            <input type="text" id="tag-name" required>
+          </div>
+          <div class="form-group">
+            <label for="tag-color">Color</label>
+            <input type="color" id="tag-color" value="#8B5CF6">
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="tag-is-profile">
+              Mark as Profile (for Auto-Filter)
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost modal-close">Cancel</button>
+            <button type="submit" class="btn-primary">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Part Modal (NEW) -->
+  <div id="modal-add-part" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add Part to Canvas</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="part-type-selector">
+          <button class="part-type-btn active" data-type="prompt">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586"></path>
+            </svg>
+            <span>From Prompts</span>
+          </button>
+          <button class="part-type-btn" data-type="template">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <path d="M9 3v18"></path>
+            </svg>
+            <span>From Template</span>
+          </button>
+          <button class="part-type-btn" data-type="free">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <span>Free Text</span>
+          </button>
+        </div>
+
+        <div id="part-content-prompt" class="part-content active">
+          <div class="form-group">
+            <label>Select Prompt</label>
+            <input type="text" id="part-prompt-search" placeholder="Search prompts...">
+          </div>
+          <div id="part-prompt-list" class="part-selection-list">
+            <!-- Dynamic prompt list -->
+          </div>
+        </div>
+
+        <div id="part-content-template" class="part-content">
+          <div id="part-template-list" class="part-selection-list">
+            <!-- Dynamic template list -->
+          </div>
+        </div>
+
+        <div id="part-content-free" class="part-content">
+          <div class="form-group">
+            <label for="part-free-title">Title</label>
+            <input type="text" id="part-free-title" placeholder="Part title">
+          </div>
+          <div class="form-group">
+            <label for="part-free-content">Content</label>
+            <textarea id="part-free-content" rows="8" placeholder="Enter your text here..."></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-ghost modal-close">Cancel</button>
+          <button type="button" id="btn-confirm-add-part" class="btn-primary">Add to Canvas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Variables Modal (NEW) -->
+  <div id="modal-template-vars" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-template-vars-title">Fill Template Variables</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-template-vars">
+          <div id="template-vars-container">
+            <!-- Dynamic variable inputs -->
+          </div>
+          <div class="template-preview">
+            <h4>Preview</h4>
+            <textarea id="template-preview-text" rows="10" readonly></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost modal-close">Cancel</button>
+            <button type="submit" class="btn-primary">Add to Canvas</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal (Existing) -->
+  <div id="modal-settings" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Settings & Data Management</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <h3>Export / Import</h3>
+          <div class="settings-actions">
+            <button id="btn-export-all" class="btn-primary">Export All Data</button>
+            <button id="btn-import-file" class="btn-secondary">Import Data...</button>
+            <input type="file" id="file-import" accept=".json" style="display:none;">
+          </div>
+          <p class="settings-hint">Export your data as backup or to use on another device.</p>
+        </div>
+
+        <div class="settings-section">
+          <h3>Automatic Backups</h3>
+          <div id="backup-list" class="backup-list"></div>
+          <p class="settings-hint">Last 5 backups are saved automatically.</p>
+        </div>
+
+        <div class="settings-section">
+          <h3>Keyboard Shortcuts</h3>
+          <button id="btn-show-shortcuts" class="btn-secondary">Show Shortcuts</button>
+          <p class="settings-hint">Press <kbd>?</kbd> anytime to show shortcuts.</p>
+        </div>
+
+        <div class="settings-section">
+          <h3>Delete Data</h3>
+          <button id="btn-delete-all-data" class="btn-danger">Delete All Data</button>
+          <p class="settings-hint">⚠️ Warning: This action cannot be undone!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../core/dataModel.js"></script>
+  <script src="../core/storage.js"></script>
+  <script src="../core/megaprompt.js"></script>
+  <script src="../core/exportImport.js"></script>
+  <script src="../core/bulkOperations.js"></script>
+  <script src="../core/autoFilter.js"></script>
+  <script src="../core/keyboardShortcuts.js"></script>
+  <script src="../core/templateManager.js"></script>
+  <script src="../core/megadraftManager.js"></script>
+  <script src="../core/defaultProfiles.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
