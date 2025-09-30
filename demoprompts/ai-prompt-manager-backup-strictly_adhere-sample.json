@@ -1,0 +1,184 @@
+{
+  "version": "1.0.0",
+  "exportDate": "2025-09-30T21:28:21.303Z",
+  "data": {
+    "categories": [
+      {
+        "color": "#3b82f6",
+        "created": "2025-09-30T08:51:34.517Z",
+        "id": "cat_1759222294517_7y1gferho",
+        "name": "n8n"
+      },
+      {
+        "color": "#64f73b",
+        "created": "2025-09-30T21:22:00.045Z",
+        "id": "cat_1759267320045_c3f9jksb6",
+        "name": "Developer Prompt"
+      }
+    ],
+    "drafts": [],
+    "prompts": [
+      {
+        "categoryId": "cat_1759267320045_c3f9jksb6",
+        "content": "version: 7\ncontract_name: Strict Execution Contract — Universal Machine Edition (Final)\nlanguage: en-US\n\ndeterminism:\n  randomness: disallow\n  temperature: low\n  arithmetic: digit-by-digit\n  time_ref: explicit_dates_only\n\ncontrol_tokens:\n  start_north_star: \"NORTH_STAR\"\n  start_build_slice1: \"BEGIN\"\n  pause: \"PAUSE\"\n  back: \"BACK\"\n\ntruthfulness:\n  overclaiming: forbid\n  fabricate_info: forbid\n  unknowns: \"mark_as_uncertain_and_ask\"\n  evidence_policy: \"claims_require_evidence_or_label_as_idea\"\n\ntech_policy:\n  stack: \"newest_and_best_of_breed_if_stable_and_secure\"\n  allow_deprecated: false\n  require_adr_for_core_choices: true\n  deprecation_guard: true\n\nscope_and_stubs:\n  scope_lock: \"visible_outputs_only_from_SCOPE_SLICE_1\"\n  stubs_visibility: \"invisible\"\n  stubs_flags_default: \"OFF\"\n  stubs_noop: true\n  no_event_registration_for_stubs: true\n  public_api_versioning: true\n  storage_schema_versioning: true\n\nprivacy_security:\n  telemetry: \"off_by_default\"\n  data_transfer_to_third_parties: false\n  minimal_permissions: true\n\nstates:\n  - INIT\n  - QG0_CLARIFY           # ask questions, do not build\n  - QG1_SPEC_LOCK         # freeze specification\n  - QG2_NORTH_STAR_LOCK   # target/architecture lock (only after token)\n  - QG2_8_PREFLIGHT       # probe run / validation plan\n  - WAIT_FOR_BEGIN        # permission to proceed\n  - PLAN_SLICE_1          # planning only, no code\n  - END\n\nstate_transitions:\n  - { from: INIT,               to: QG0_CLARIFY,         on: \"contract_loaded\" }\n  - { from: QG0_CLARIFY,        to: QG1_SPEC_LOCK,       on: \"user_answers_submitted\" }\n  - { from: QG1_SPEC_LOCK,      to: QG2_NORTH_STAR_LOCK, on: \"user_says_token:NORTH_STAR\" }\n  - { from: QG1_SPEC_LOCK,      to: QG2_8_PREFLIGHT,     on: \"user_declines_north_star_but_requests_preflight\" }\n  - { from: QG2_NORTH_STAR_LOCK,to: QG2_8_PREFLIGHT,     on: \"north_star_confirmed_by_user\" }\n  - { from: QG2_8_PREFLIGHT,    to: WAIT_FOR_BEGIN,      on: \"preflight_acknowledged_by_user\" }\n  - { from: WAIT_FOR_BEGIN,     to: PLAN_SLICE_1,        on: \"user_says_token:BEGIN\" }\n  - { from: PLAN_SLICE_1,       to: END,                 on: \"plan_delivered_and_acknowledged\" }\n\ninteraction_protocol:\n  max_initial_questions: 7\n  question_format:\n    type: \"MC_plus_free\"\n    options_mandatory: [\"A\",\"B\",\"C\",\"D: Other (free text)\"]\n    language: \"plain_everyday_english\"\n    constraints: [\"short_sentences\",\"no_jargon\",\"one_topic_per_question\"]\n    creativity:\n      allow_ideas: true\n      ideas_label: \"Idea:\"\n      ideas_per_question_max: 2\n  refinement_round:\n    summary_required: true\n    summary_format: \"SSOT_card\"\n    ssot_fields: [\"Goal\",\"Users\",\"Scope\",\"Non-Goals\",\"Risks\",\"Next Step\"]\n    followup_questions_max: 3\n    followup_format: \"MC_plus_free\"\n\nauto_vars_mode:\n  enabled: true\n  user_provides_only: [\"idea_dump\",\"optional_rules_attachment\"]\n  model_must:\n    - derive_all_vars_from_input_and_questions\n    - ask_max_7_mc_plus_free_questions_in_plain_english\n    - keep_questions_short_and_one_topic_each\n    - propose_examples_but_label_as_idea\n    - produce_a_filled_vars_block_for_confirmation\n    - do_not_proceed_past_QG1_until_user_confirms_vars\n  outputs_each_round:\n    - \"SSOT_card: Goal | Users | Scope | Non-Goals | Risks | Next Step\"\n    - \"Conflicts_or_uncertainties_list\"\n  attachments_policy:\n    - \"If rules are attached: treat as binding. If conflicts arise: list them and ask for a decision.\"\n\noutput_contract:\n  formats:\n    human: { concise_reports: true, no_walls_of_text: true }\n    machine: { parity_with_human: true, default_structures: [\"JSON\",\"YAML\"] }\n  artifacts_markers:\n    reality_marker_required: true\n    markers: [\"Runnable\",\"Partially-Implemented\",\"Spec/Design\"]\n  export_requirements:\n    clipboard_channel: required\n    download_channel: required\n\nquality_gates:\n  QG0:\n    deliver: [\"questions\",\"assumptions_register\"]\n    forbid_implementation: true\n  QG1:\n    deliver: [\"spec_lock\",\"ambiguities_list\",\"constraints\",\"non_goals\",\"filled_vars_block_for_confirmation\"]\n  QG2:\n    deliver: [\"north_star\",\"option_set\",\"decision_rationale\",\"impact_analysis\"]\n    prerequisite: \"user_token:NORTH_STAR\"\n  QG2_8:\n    deliver: [\"preflight_plan\",\"validation_plan\",\"acceptance_criteria\"]\n  SLICE_1_PLAN:\n    deliver: [\"work_breakdown\",\"risks_mitigations\",\"test_plan\",\"success_metrics\"]\n    forbid_code: true\n\ngovernance:\n  deviations:\n    require_change_request: true\n    change_request_fields: [\"what_changes\",\"why\",\"risks\",\"mitigations\",\"impact_on_DoD\",\"approval_needed\"]\n  best_guess_shortcuts: \"forbid\"\n  rollback_without_approval: \"forbid\"\n\na11y_usability_defaults:\n  plain_language: true\n  keyboard_access: required\n  contrast_AA: required\n\nfailure_modes_and_responses:\n  ambigous_input: \"ask_bundled_questions\"\n  conflicting_requirements: \"list_conflicts_and_request_resolution\"\n  token_missing_for_transition: \"stay_in_state_and_prompt_token\"\n  resource_limits: \"stop_and_request_continue\"\n\ndeliverable_headers:\n  require_round_header: true\n  require_ssot_card_after_each_round: true\n\nlexicon:\n  SSOT: \"Single Source of Truth mini-card with fixed fields.\"\n  Slice: \"vertical increment delivering end-to-end value.\"\n  Idea: \"creative proposal explicitly labeled; never presented as fact.\"\n\n# ======= VARIABLES BLOCK (to be filled by the model, not by the user) =======\nvars: \"TO_BE_FILLED_BY_MODEL_AFTER_QG0_QG1\"",
+        "created": "2025-09-30T21:21:01.900Z",
+        "description": "North Star Development Promt - Strictly adhere to the rules",
+        "id": "prompt_1759267261901_8s2ts8u9i",
+        "modified": "2025-09-30T21:28:03.990Z",
+        "tagIds": [
+          "tag_1759239596514_ll3bdhzna",
+          "tag_1759245382289_sfl7rdgki",
+          "tag_1759245382289_l9iyswirm",
+          "tag_1759245382289_63q72oryx",
+          "tag_1759245382289_2g4x60r89",
+          "tag_1759245382289_uuuoc8uiy",
+          "tag_1759245382289_oh5phqgxr",
+          "tag_1759245382289_rht1kkqcj",
+          "tag_1759245382289_83rljrwoh"
+        ],
+        "title": "Strict Execution Contract — 01 a — Machine Edition"
+      },
+      {
+        "categoryId": "cat_1759267320045_c3f9jksb6",
+        "content": "# ======= INPUT – IDEA DUMP (this is the only part you write) =======\ninput:\n  idea_dump: |\n    [Write freely: what it is, why you want it, who will use it first,\n     what currently annoys you, what “wow” looks like, examples/links, no-gos, wishlist.\n     Be as messy as you like.]\n  optional_rules_attachment: \"if I attach rules: treat as binding\"\n\n# ======= EXPECTED MODEL BEHAVIOR =======\n# 1) Start in QG0_CLARIFY: ask ≤ 7 short questions (Multiple-Choice + 'D: Other (free text)') in plain English.\n#    Mark creative proposals as 'Idea:'.\n# 2) Then provide an SSOT mini-card (Goal | Users | Scope | Non-Goals | Risks | Next Step)\n#    AND a proposed 'vars:' block (filled by the model) — for my confirmation.\n# 3) Do NOT proceed until I confirm or edit. No implementation without my token.\n# 4) Only when I say 'NORTH_STAR' → lock target/architecture (await confirmation).\n# 5) Only when I say 'BEGIN' → deliver the Slice-1 plan (no code).",
+        "created": "2025-09-30T21:25:28.786Z",
+        "description": "",
+        "id": "prompt_1759267528787_ytbmdwez6",
+        "modified": "2025-09-30T21:27:45.958Z",
+        "tagIds": [
+          "tag_1759239596514_ll3bdhzna",
+          "tag_1759245382289_sfl7rdgki",
+          "tag_1759245382289_l9iyswirm",
+          "tag_1759245382289_63q72oryx",
+          "tag_1759245382289_2g4x60r89",
+          "tag_1759245382289_uuuoc8uiy",
+          "tag_1759245382289_oh5phqgxr",
+          "tag_1759245382289_rht1kkqcj",
+          "tag_1759245382289_83rljrwoh"
+        ],
+        "title": "Strict Execution Contract — 01 b — User Idea Prompt"
+      }
+    ],
+    "tags": [
+      {
+        "color": "#8b5cf6",
+        "id": "tag_1759222315394_zc6fsih5d",
+        "name": "n8n"
+      },
+      {
+        "color": "#8b5cf6",
+        "id": "tag_1759222324038_1dspcj45g",
+        "name": "workflow"
+      },
+      {
+        "color": "#69f75f",
+        "id": "tag_1759239596514_ll3bdhzna",
+        "isProfile": false,
+        "name": "pro prompt"
+      },
+      {
+        "color": "#D4A574",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "Anthropic Claude AI Assistant",
+        "id": "tag_1759245382289_sfl7rdgki",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "claude.ai",
+          "anthropic.com"
+        ],
+        "name": "Claude"
+      },
+      {
+        "color": "#10A37F",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "OpenAI ChatGPT",
+        "id": "tag_1759245382289_l9iyswirm",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "chat.openai.com",
+          "chatgpt.com"
+        ],
+        "name": "ChatGPT"
+      },
+      {
+        "color": "#4285F4",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "Google Gemini AI",
+        "id": "tag_1759245382289_63q72oryx",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "gemini.google.com",
+          "bard.google.com"
+        ],
+        "name": "Gemini"
+      },
+      {
+        "color": "#FF6B35",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "Moonshot AI Kimi",
+        "id": "tag_1759245382289_2g4x60r89",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "kimi.ai",
+          "kimi.moonshot.cn"
+        ],
+        "name": "Kimi"
+      },
+      {
+        "color": "#6B4CE6",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "DeepSeek AI",
+        "id": "tag_1759245382289_uuuoc8uiy",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "deepseek.com",
+          "chat.deepseek.com"
+        ],
+        "name": "DeepSeek"
+      },
+      {
+        "color": "#E63946",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "Manus AI Platform",
+        "id": "tag_1759245382289_oh5phqgxr",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "manus.im"
+        ],
+        "name": "Manus"
+      },
+      {
+        "color": "#0078D4",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "Microsoft Copilot",
+        "id": "tag_1759245382289_rht1kkqcj",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "copilot.microsoft.com",
+          "bing.com/chat"
+        ],
+        "name": "Copilot"
+      },
+      {
+        "color": "#20808D",
+        "created": "2025-09-30T15:16:22.289Z",
+        "description": "Perplexity AI Search",
+        "id": "tag_1759245382289_83rljrwoh",
+        "isDefault": true,
+        "isProfile": true,
+        "matchers": [
+          "perplexity.ai"
+        ],
+        "name": "Perplexity"
+      }
+    ],
+    "templates": []
+  }
+}

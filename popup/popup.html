@@ -33,7 +33,7 @@
   <!-- Main Content -->
   <main class="content content-wide">
     
-    <!-- CANVAS VIEW (NEW in Slice 4) -->
+    <!-- CANVAS VIEW -->
     <section id="view-canvas" class="view active">
       <!-- Canvas Toolbar -->
       <div class="canvas-toolbar">
@@ -74,6 +74,13 @@
             </svg>
             Copy to Clipboard
           </button>
+          <button id="btn-copy-canvas-minify" class="btn-secondary" title="Copy with minified whitespace">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+            </svg>
+            Minify
+          </button>
         </div>
       </div>
 
@@ -90,7 +97,6 @@
             </button>
           </div>
           <div id="canvas-parts-list" class="canvas-parts-list">
-            <!-- Dynamic parts list -->
             <div class="empty-state-small">
               <p>No parts yet</p>
               <button class="btn-secondary-sm" id="btn-add-first-part">Add Prompt</button>
@@ -106,6 +112,17 @@
             <span id="canvas-part-count">0 parts</span>
             <span id="canvas-token-estimate">~0 tokens</span>
           </div>
+          
+          <!-- Quick Sets Actions (Slice 5) -->
+          <div class="canvas-quick-actions">
+            <button id="btn-save-quick-set" class="btn-secondary-sm">
+              💾 Save as Quick Set
+            </button>
+            <button id="btn-load-quick-set" class="btn-secondary-sm">
+              📂 Load Quick Set
+            </button>
+          </div>
+          
           <textarea 
             id="canvas-editor" 
             class="canvas-editor" 
@@ -119,14 +136,12 @@ You can:
 • Copy the final result to clipboard"
           ></textarea>
           
-          <div class="canvas-warnings" id="canvas-warnings" style="display:none;">
-            <!-- Dynamic warnings -->
-          </div>
+          <div class="canvas-warnings" id="canvas-warnings" style="display:none;"></div>
         </div>
       </div>
     </section>
 
-    <!-- PROMPTS VIEW (Existing from Slice 3) -->
+    <!-- PROMPTS VIEW -->
     <section id="view-prompts" class="view">
       <div class="sticky-header">
         <div class="search-box">
@@ -153,7 +168,7 @@ You can:
       </div>
     </section>
 
-    <!-- TEMPLATES VIEW (NEW in Slice 4) -->
+    <!-- TEMPLATES VIEW -->
     <section id="view-templates" class="view">
       <div class="sticky-header">
         <h2>Framework Templates</h2>
@@ -217,21 +232,17 @@ You can:
         </div>
       </div>
 
-      <div id="custom-templates-list" class="item-list" style="margin-top: 24px;">
-        <!-- Custom templates dynamically rendered -->
-      </div>
+      <div id="custom-templates-list" class="item-list" style="margin-top: 24px;"></div>
     </section>
 
-    <!-- DRAFTS VIEW (NEW in Slice 4) -->
+    <!-- DRAFTS VIEW -->
     <section id="view-drafts" class="view">
       <div class="sticky-header">
         <h2>Saved Drafts</h2>
         <button id="btn-create-draft-from-view" class="btn-primary">+ New Draft</button>
       </div>
 
-      <div id="drafts-list" class="item-list">
-        <!-- Drafts dynamically rendered -->
-      </div>
+      <div id="drafts-list" class="item-list"></div>
 
       <div id="empty-drafts" class="empty-state" style="display:none;">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -242,7 +253,7 @@ You can:
       </div>
     </section>
 
-    <!-- CATEGORIES VIEW (Existing) -->
+    <!-- CATEGORIES VIEW -->
     <section id="view-categories" class="view">
       <div class="sticky-header">
         <button id="btn-add-category" class="btn-primary">+ New Category</button>
@@ -253,7 +264,7 @@ You can:
       </div>
     </section>
 
-    <!-- TAGS VIEW (Existing) -->
+    <!-- TAGS VIEW (Fixed for Slice 5) -->
     <section id="view-tags" class="view">
       <div class="sticky-header">
         <button id="btn-add-tag" class="btn-primary">+ New Tag</button>
@@ -275,7 +286,7 @@ You can:
 
   </main>
 
-  <!-- MODALS (Existing + New) -->
+  <!-- MODALS -->
   
   <!-- Prompt Modal -->
   <div id="modal-prompt" class="modal">
@@ -381,7 +392,7 @@ You can:
     </div>
   </div>
 
-  <!-- Add Part Modal (NEW) -->
+  <!-- Add Part Modal -->
   <div id="modal-add-part" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -416,15 +427,11 @@ You can:
             <label>Select Prompt</label>
             <input type="text" id="part-prompt-search" placeholder="Search prompts...">
           </div>
-          <div id="part-prompt-list" class="part-selection-list">
-            <!-- Dynamic prompt list -->
-          </div>
+          <div id="part-prompt-list" class="part-selection-list"></div>
         </div>
 
         <div id="part-content-template" class="part-content">
-          <div id="part-template-list" class="part-selection-list">
-            <!-- Dynamic template list -->
-          </div>
+          <div id="part-template-list" class="part-selection-list"></div>
         </div>
 
         <div id="part-content-free" class="part-content">
@@ -446,7 +453,7 @@ You can:
     </div>
   </div>
 
-  <!-- Template Variables Modal (NEW) -->
+  <!-- Template Variables Modal -->
   <div id="modal-template-vars" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -455,9 +462,7 @@ You can:
       </div>
       <div class="modal-body">
         <form id="form-template-vars">
-          <div id="template-vars-container">
-            <!-- Dynamic variable inputs -->
-          </div>
+          <div id="template-vars-container"></div>
           <div class="template-preview">
             <h4>Preview</h4>
             <textarea id="template-preview-text" rows="10" readonly></textarea>
@@ -471,7 +476,7 @@ You can:
     </div>
   </div>
 
-  <!-- Settings Modal (Existing) -->
+  <!-- Settings Modal (Enhanced for Slice 5) -->
   <div id="modal-settings" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -479,6 +484,17 @@ You can:
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- Display Settings (Slice 5) -->
+        <div class="settings-section">
+          <h3>Display Settings</h3>
+          <div class="settings-toggles">
+            <button id="density-toggle" class="toggle-btn">📐 Compact</button>
+            <button id="wide-mode-toggle" class="toggle-btn">↔️ Wide</button>
+          </div>
+          <p class="settings-hint">Settings are saved per device and apply to all views.</p>
+        </div>
+
+        <!-- Export / Import -->
         <div class="settings-section">
           <h3>Export / Import</h3>
           <div class="settings-actions">
@@ -489,23 +505,77 @@ You can:
           <p class="settings-hint">Export your data as backup or to use on another device.</p>
         </div>
 
+        <!-- Automatic Backups (Enhanced for Slice 5) -->
         <div class="settings-section">
           <h3>Automatic Backups</h3>
           <div id="backup-list" class="backup-list"></div>
+          <div id="backup-list-empty" class="backup-list-empty" style="display:none;">
+            No backups available. Backups are created automatically on import.
+          </div>
           <p class="settings-hint">Last 5 backups are saved automatically.</p>
         </div>
 
+        <!-- Keyboard Shortcuts -->
         <div class="settings-section">
           <h3>Keyboard Shortcuts</h3>
           <button id="btn-show-shortcuts" class="btn-secondary">Show Shortcuts</button>
-          <p class="settings-hint">Press <kbd>?</kbd> anytime to show shortcuts.</p>
+          <p class="settings-hint">Press <kbd>?</kbd> anytime to show shortcuts. Use <kbd>Cmd/Ctrl+K</kbd> for Command Palette.</p>
         </div>
 
+        <!-- Delete Data -->
         <div class="settings-section">
           <h3>Delete Data</h3>
           <button id="btn-delete-all-data" class="btn-danger">Delete All Data</button>
           <p class="settings-hint">⚠️ Warning: This action cannot be undone!</p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Set Save Modal (Slice 5) -->
+  <div id="modal-quick-set-save" class="modal">
+    <div class="modal-content modal-medium">
+      <div class="modal-header">
+        <h2>Save Quick Set</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">
+          Save current canvas (<span id="quick-set-parts-count">0</span> prompts) as a reusable Quick Set.
+        </p>
+        <form id="form-quick-set-save">
+          <div class="form-group">
+            <label for="quick-set-name">Name *</label>
+            <input type="text" id="quick-set-name" placeholder="e.g., Daily Writing Setup" required maxlength="50" />
+          </div>
+          <div class="form-group">
+            <label for="quick-set-description">Description (optional)</label>
+            <textarea id="quick-set-description" rows="3" placeholder="What is this Quick Set for?" maxlength="200"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost modal-close">Cancel</button>
+            <button type="submit" class="btn-primary">Save Quick Set</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Sets List Modal (Slice 5) -->
+  <div id="modal-quick-sets-list" class="modal">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>Quick Sets</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">
+          Select a Quick Set to apply its configuration to your current canvas.
+        </p>
+        <div id="quick-sets-list" class="quick-sets-container"></div>
+        <p class="modal-footer-hint">
+          💡 Quick Sets remember which prompts were in your canvas and their order. Missing prompts will be skipped automatically.
+        </p>
       </div>
     </div>
   </div>
@@ -518,6 +588,10 @@ You can:
   <script src="../core/bulkOperations.js"></script>
   <script src="../core/autoFilter.js"></script>
   <script src="../core/keyboardShortcuts.js"></script>
+  <!-- Slice 5 Modules -->
+  <script src="../core/commandPalette.js"></script>
+  <script src="../core/usabilityFeatures.js"></script>
+  <!-- Slice 4 Modules -->
   <script src="../core/templateManager.js"></script>
   <script src="../core/megadraftManager.js"></script>
   <script src="../core/defaultProfiles.js"></script>
