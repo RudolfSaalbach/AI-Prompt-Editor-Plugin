@@ -1,12 +1,8 @@
 /**
- * Default AI Profiles for Slice 4
- * Pre-configured profiles for major AI platforms
+ * Default AI Profiles
  */
 
 class DefaultProfiles {
-  /**
-   * Built-in AI platform profiles
-   */
   static PROFILES = [
     {
       id: 'profile_claude',
@@ -14,10 +10,7 @@ class DefaultProfiles {
       color: '#D4A574',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'claude.ai',
-        'anthropic.com'
-      ],
+      matchers: ['claude.ai', 'anthropic.com'],
       description: 'Anthropic Claude AI Assistant'
     },
     {
@@ -26,10 +19,7 @@ class DefaultProfiles {
       color: '#10A37F',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'chat.openai.com',
-        'chatgpt.com'
-      ],
+      matchers: ['chat.openai.com', 'chatgpt.com'],
       description: 'OpenAI ChatGPT'
     },
     {
@@ -38,10 +28,7 @@ class DefaultProfiles {
       color: '#4285F4',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'gemini.google.com',
-        'bard.google.com'
-      ],
+      matchers: ['gemini.google.com', 'bard.google.com'],
       description: 'Google Gemini AI'
     },
     {
@@ -50,10 +37,7 @@ class DefaultProfiles {
       color: '#FF6B35',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'kimi.ai',
-        'kimi.moonshot.cn'
-      ],
+      matchers: ['kimi.ai', 'kimi.moonshot.cn'],
       description: 'Moonshot AI Kimi'
     },
     {
@@ -62,22 +46,8 @@ class DefaultProfiles {
       color: '#6B4CE6',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'deepseek.com',
-        'chat.deepseek.com'
-      ],
+      matchers: ['deepseek.com', 'chat.deepseek.com'],
       description: 'DeepSeek AI'
-    },
-    {
-      id: 'profile_manus',
-      name: 'Manus',
-      color: '#E63946',
-      isProfile: true,
-      isDefault: true,
-      matchers: [
-        'manus.im'
-      ],
-      description: 'Manus AI Platform'
     },
     {
       id: 'profile_copilot',
@@ -85,10 +55,7 @@ class DefaultProfiles {
       color: '#0078D4',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'copilot.microsoft.com',
-        'bing.com/chat'
-      ],
+      matchers: ['copilot.microsoft.com', 'bing.com/chat'],
       description: 'Microsoft Copilot'
     },
     {
@@ -97,16 +64,11 @@ class DefaultProfiles {
       color: '#20808D',
       isProfile: true,
       isDefault: true,
-      matchers: [
-        'perplexity.ai'
-      ],
+      matchers: ['perplexity.ai'],
       description: 'Perplexity AI Search'
     }
   ];
 
-  /**
-   * Get all default profiles
-   */
   static getAll() {
     return this.PROFILES.map(profile => ({
       ...profile,
@@ -114,30 +76,18 @@ class DefaultProfiles {
     }));
   }
 
-  /**
-   * Get profile by matcher URL
-   */
   static findByUrl(url) {
     if (!url) return null;
-
     const lowerUrl = url.toLowerCase();
-
     return this.PROFILES.find(profile =>
       profile.matchers.some(matcher => lowerUrl.includes(matcher))
     );
   }
 
-  /**
-   * Check if profile is default
-   */
   static isDefault(profileId) {
     return this.PROFILES.some(p => p.id === profileId);
   }
 
-  /**
-   * Merge default profiles with user profiles
-   * Adds defaults that don't exist, preserves user customizations
-   */
   static mergeWithUserProfiles(userTags) {
     const existingNames = new Set(
       userTags
@@ -161,9 +111,6 @@ class DefaultProfiles {
     return [...userTags, ...newDefaults];
   }
 
-  /**
-   * Get profile info for display
-   */
   static getProfileInfo(profileId) {
     const profile = this.PROFILES.find(p => p.id === profileId);
     
@@ -177,14 +124,9 @@ class DefaultProfiles {
     };
   }
 
-  /**
-   * Match URL to multiple profiles
-   */
   static matchAll(url) {
     if (!url) return [];
-
     const lowerUrl = url.toLowerCase();
-
     return this.PROFILES.filter(profile =>
       profile.matchers.some(matcher => lowerUrl.includes(matcher))
     );

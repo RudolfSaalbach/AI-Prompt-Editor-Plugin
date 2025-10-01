@@ -1,12 +1,8 @@
 /**
- * Template Manager for Slice 4
- * Framework templates (CRISE, CRAFT, TAG) with variable substitution
+ * Template Manager - Framework templates with variable substitution
  */
 
 class TemplateManager {
-  /**
-   * Built-in framework templates
-   */
   static FRAMEWORKS = {
     CRISE: {
       id: 'framework_crise',
@@ -91,9 +87,6 @@ The desired outcome is: {{goal}}`
     }
   };
 
-  /**
-   * Parse template and extract variables
-   */
   static parseVariables(template) {
     const regex = /\{\{([^}]+)\}\}/g;
     const variables = new Set();
@@ -109,19 +102,14 @@ The desired outcome is: {{goal}}`
     return Array.from(variables);
   }
 
-  /**
-   * Resolve template with variable values
-   */
   static resolveTemplate(template, values = {}) {
     let resolved = template;
 
-    // Process conditionals
     const conditionalRegex = /\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
     resolved = resolved.replace(conditionalRegex, (match, varName, content) => {
       return values[varName] ? content : '';
     });
 
-    // Replace variables
     const varRegex = /\{\{(\w+)\}\}/g;
     resolved = resolved.replace(varRegex, (match, varName) => {
       return values[varName] || match;
@@ -130,17 +118,11 @@ The desired outcome is: {{goal}}`
     return resolved.trim();
   }
 
-  /**
-   * Get unresolved variables
-   */
   static getUnresolvedVariables(template, values = {}) {
     const allVars = this.parseVariables(template);
     return allVars.filter(varName => !values[varName]);
   }
 
-  /**
-   * Validate required variables
-   */
   static validateVariables(variables, values = {}) {
     const required = variables.filter(v => v.required);
     const missing = required.filter(v => !values[v.name]);
@@ -151,9 +133,6 @@ The desired outcome is: {{goal}}`
     };
   }
 
-  /**
-   * Create template from framework
-   */
   static createFromFramework(frameworkKey, customValues = {}) {
     const framework = this.FRAMEWORKS[frameworkKey];
     if (!framework) {
@@ -172,9 +151,6 @@ The desired outcome is: {{goal}}`
     };
   }
 
-  /**
-   * Get preview of resolved template
-   */
   static getPreview(templateInstance) {
     return this.resolveTemplate(
       templateInstance.template,

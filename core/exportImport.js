@@ -1,20 +1,13 @@
 /**
- * Export/Import Manager für Slice 2
- * Handles JSON Export/Import mit Duplikatserkennung
+ * Export/Import Manager
  */
 
 class ExportImportManager {
-  /**
-   * Exportiert alle Daten als JSON-Datei
-   * @param {Object} data - Zu exportierende Daten
-   * @param {string} filename - Dateiname (optional)
-   */
   static exportToJSON(data, filename = null) {
     if (!DataModel.validate(data)) {
-      throw new Error('Ungültige Datenstruktur für Export');
+      throw new Error('Invalid data structure for export');
     }
 
-    // Metadaten hinzufügen
     const exportData = {
       version: '1.0.0',
       exportDate: new Date().toISOString(),
@@ -25,11 +18,9 @@ class ExportImportManager {
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
-    // Dateiname generieren
     const timestamp = new Date().toISOString().split('T')[0];
     const finalFilename = filename || `ai-prompt-manager-backup-${timestamp}.json`;
 
-    // Download triggern
     const a = document.createElement('a');
     a.href = url;
     a.download = finalFilename;
@@ -41,11 +32,6 @@ class ExportImportManager {
     return finalFilename;
   }
 
-  /**
-   * Importiert Daten aus JSON-Datei
-   * @param {File} file - JSON-Datei
-   * @returns {Promise<Object>} Parsed Import-Daten
-   */
   static async importFromJSON(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -54,38 +40,27 @@ class ExportImportManager {
         try {
           const importData = JSON.parse(e.target.result);
 
-          // Validierung
           if (!importData.data || !DataModel.validate(importData.data)) {
-            throw new Error('Ungültige Datenstruktur in Import-Datei');
+            throw new Error('Invalid data structure in import file');
           }
 
           resolve(importData);
         } catch (error) {
-          reject(new Error('Fehler beim Parsen der JSON-Datei: ' + error.message));
+          reject(new Error('Failed to parse JSON: ' + error.message));
         }
       };
 
-      reader.onerror = () => reject(new Error('Fehler beim Lesen der Datei'));
+      reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsText(file);
     });
   }
 
-  /**
-   * Merge-Strategien für Import
-   */
   static MERGE_STRATEGIES = {
-    REPLACE: 'replace',      // Alle Daten ersetzen
-    MERGE: 'merge',          // Duplikate überspringen, neue hinzufügen
-    OVERWRITE: 'overwrite'   // Duplikate überschreiben
+    REPLACE: 'replace',
+    MERGE: 'merge',
+    OVERWRITE: 'overwrite'
   };
 
-  /**
-   * Merged importierte Daten mit existierenden Daten
-   * @param {Object} existingData - Aktuelle Daten
-   * @param {Object} importData - Importierte Daten
-   * @param {string} strategy - Merge-Strategie
-   * @returns {Object} Merged Daten + Statistik
-   */
   static mergeData(existingData, importData, strategy = this.MERGE_STRATEGIES.MERGE) {
     const stats = {
       categories: { added: 0, updated: 0, skipped: 0 },
@@ -94,7 +69,6 @@ class ExportImportManager {
     };
 
     if (strategy === this.MERGE_STRATEGIES.REPLACE) {
-      // Kompletter Replace
       return {
         data: importData.data,
         stats: {
@@ -111,18 +85,15 @@ class ExportImportManager {
       prompts: [...existingData.prompts]
     };
 
-    // ID-Mapping für Referenzen
     const categoryIdMap = new Map();
     const tagIdMap = new Map();
 
-    // Kategorien mergen
     importData.data.categories.forEach(importCat => {
       const existing = result.categories.find(c => 
         c.name.toLowerCase() === importCat.name.toLowerCase()
       );
 
       if (!existing) {
-        // Neu hinzufügen
         const newId = DataModel.generateId('cat');
         categoryIdMap.set(importCat.id, newId);
         result.categories.push({
@@ -132,19 +103,16 @@ class ExportImportManager {
         });
         stats.categories.added++;
       } else if (strategy === this.MERGE_STRATEGIES.OVERWRITE) {
-        // Überschreiben
         categoryIdMap.set(importCat.id, existing.id);
         existing.name = importCat.name;
         existing.color = importCat.color;
         stats.categories.updated++;
       } else {
-        // Skip
         categoryIdMap.set(importCat.id, existing.id);
         stats.categories.skipped++;
       }
     });
 
-    // Tags mergen
     importData.data.tags.forEach(importTag => {
       const existing = result.tags.find(t => 
         t.name.toLowerCase() === importTag.name.toLowerCase()
@@ -169,7 +137,6 @@ class ExportImportManager {
       }
     });
 
-    // Prompts mergen
     importData.data.prompts.forEach(importPrompt => {
       const existing = result.prompts.find(p => 
         p.title.toLowerCase() === importPrompt.title.toLowerCase() &&
@@ -177,7 +144,6 @@ class ExportImportManager {
       );
 
       if (!existing) {
-        // Neu hinzufügen mit gemappten IDs
         const newId = DataModel.generateId('prompt');
         const mappedCategoryId = importPrompt.categoryId 
           ? (categoryIdMap.get(importPrompt.categoryId) || null)
@@ -196,7 +162,6 @@ class ExportImportManager {
         });
         stats.prompts.added++;
       } else if (strategy === this.MERGE_STRATEGIES.OVERWRITE) {
-        // Überschreiben
         const mappedCategoryId = importPrompt.categoryId 
           ? (categoryIdMap.get(importPrompt.categoryId) || existing.categoryId)
           : null;
@@ -212,7 +177,6 @@ class ExportImportManager {
         existing.modified = new Date().toISOString();
         stats.prompts.updated++;
       } else {
-        // Skip
         stats.prompts.skipped++;
       }
     });
@@ -220,11 +184,6 @@ class ExportImportManager {
     return { data: result, stats };
   }
 
-  /**
-   * Erstellt automatisches Backup
-   * @param {Object} data - Zu sichernde Daten
-   * @returns {string} Backup-Key
-   */
   static createAutoBackup(data) {
     const timestamp = Date.now();
     const backupKey = `aiPromptManager_backup_${timestamp}`;
@@ -238,17 +197,11 @@ class ExportImportManager {
     };
 
     storage.set({ [backupKey]: backupData });
-
-    // Alte Backups löschen (nur letzte 5 behalten)
     this.cleanupOldBackups();
 
     return backupKey;
   }
 
-  /**
-   * Lädt Liste aller Backups
-   * @returns {Promise<Array>} Backup-Liste
-   */
   static async listBackups() {
     const storage = (typeof browser !== 'undefined' ? browser : chrome).storage.local;
     const allData = await storage.get(null);
@@ -266,25 +219,17 @@ class ExportImportManager {
     return backups;
   }
 
-  /**
-   * Restored Backup
-   * @param {string} backupKey - Backup-Key
-   * @returns {Promise<Object>} Restored Daten
-   */
   static async restoreBackup(backupKey) {
     const storage = (typeof browser !== 'undefined' ? browser : chrome).storage.local;
     const result = await storage.get(backupKey);
     
     if (!result[backupKey]) {
-      throw new Error('Backup nicht gefunden');
+      throw new Error('Backup not found');
     }
 
     return result[backupKey].data;
   }
 
-  /**
-   * Löscht alte Backups (behält nur die letzten 5)
-   */
   static async cleanupOldBackups() {
     const backups = await this.listBackups();
     
@@ -299,7 +244,6 @@ class ExportImportManager {
   }
 }
 
-// Export
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ExportImportManager;
 }

@@ -8,11 +8,8 @@
 
   /**
    * Findet das Haupt-Textarea-Element auf claude.ai
-   * ACHTUNG: Dieser Selektor muss getestet und ggf. angepasst werden
-   * @returns {HTMLElement|null} Textarea-Element
    */
   function findClaudeTextarea() {
-    // Mögliche Selektoren (von spezifisch zu generisch)
     const selectors = [
       'div[contenteditable="true"][data-placeholder]',
       'div[contenteditable="true"]',
@@ -36,8 +33,6 @@
 
   /**
    * Fügt Text in das Textarea ein
-   * @param {string} text - Einzufügender Text
-   * @returns {boolean} Erfolg
    */
   function insertText(text) {
     const textarea = findClaudeTextarea();
@@ -47,24 +42,20 @@
     }
 
     try {
-      // Methode 1: ContentEditable (z.B. ProseMirror)
       if (textarea.contentEditable === 'true') {
         textarea.focus();
         
-        // Bestehenden Inhalt ersetzen oder anhängen
         if (textarea.textContent.trim().length === 0) {
           textarea.textContent = text;
         } else {
           textarea.textContent += '\n\n' + text;
         }
 
-        // Input-Event triggern für Reaktivität
         textarea.dispatchEvent(new Event('input', { bubbles: true }));
         textarea.dispatchEvent(new Event('change', { bubbles: true }));
         return true;
       }
 
-      // Methode 2: Standard Textarea
       if (textarea.tagName === 'TEXTAREA') {
         textarea.focus();
         textarea.value = textarea.value ? textarea.value + '\n\n' + text : text;
@@ -94,7 +85,7 @@
       sendResponse({ available: available });
     }
 
-    return true; // Async Response
+    return true;
   });
 
   console.log('[AI Prompt Manager] Content Script geladen');

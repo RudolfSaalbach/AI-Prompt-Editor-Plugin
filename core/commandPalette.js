@@ -1,8 +1,5 @@
 /**
- * SLICE 5 - COMMAND PALETTE
- * Minimale, schnelle Command Palette mit ⌘K / Ctrl+K
- * 
- * INTEGRATION: Als neues Modul core/commandPalette.js speichern
+ * Command Palette - Full Implementation
  */
 
 class CommandPalette {
@@ -15,28 +12,13 @@ class CommandPalette {
     this.onExecute = null;
   }
 
-  /**
-   * Initialisierung - Command Palette erstellen und Shortcuts registrieren
-   */
   init(commandDefinitions, onExecute) {
     this.commands = commandDefinitions;
     this.onExecute = onExecute;
-    
-    // HTML erstellen
     this.createPaletteHTML();
-    
-    // Keyboard Shortcut: Cmd/Ctrl + K
-    document.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        this.toggle();
-      }
-    });
+    this.registerShortcuts();
   }
 
-  /**
-   * HTML Structure für Command Palette erstellen
-   */
   createPaletteHTML() {
     const palette = document.createElement('div');
     palette.id = 'command-palette';
@@ -70,7 +52,6 @@ class CommandPalette {
     
     document.body.appendChild(palette);
     
-    // Event Listeners
     const input = palette.querySelector('.command-palette-input');
     const backdrop = palette.querySelector('.command-palette-backdrop');
     
@@ -79,9 +60,15 @@ class CommandPalette {
     backdrop.addEventListener('click', () => this.close());
   }
 
-  /**
-   * Command Palette öffnen/schließen
-   */
+  registerShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        this.toggle();
+      }
+    });
+  }
+
   toggle() {
     if (this.isOpen) {
       this.close();
@@ -90,9 +77,6 @@ class CommandPalette {
     }
   }
 
-  /**
-   * Command Palette öffnen
-   */
   open() {
     this.isOpen = true;
     this.selectedIndex = 0;
@@ -105,23 +89,16 @@ class CommandPalette {
     input.value = '';
     input.focus();
     
-    // Initial: alle Commands anzeigen
     this.filteredCommands = [...this.commands];
     this.renderResults();
   }
 
-  /**
-   * Command Palette schließen
-   */
   close() {
     this.isOpen = false;
     const palette = document.getElementById('command-palette');
     palette.classList.remove('active');
   }
 
-  /**
-   * Suche durchführen
-   */
   handleSearch(term) {
     this.searchTerm = term.toLowerCase().trim();
     this.selectedIndex = 0;
@@ -139,9 +116,6 @@ class CommandPalette {
     this.renderResults();
   }
 
-  /**
-   * Keyboard Navigation
-   */
   handleKeydown(e) {
     switch(e.key) {
       case 'ArrowDown':
@@ -170,9 +144,6 @@ class CommandPalette {
     }
   }
 
-  /**
-   * Results rendern
-   */
   renderResults() {
     const container = document.querySelector('.command-palette-results');
     
@@ -185,7 +156,6 @@ class CommandPalette {
       return;
     }
     
-    // Gruppierung nach Kategorie
     const grouped = this.groupByCategory(this.filteredCommands);
     
     container.innerHTML = Object.entries(grouped).map(([category, cmds]) => `
@@ -216,7 +186,6 @@ class CommandPalette {
       </div>
     `).join('');
     
-    // Click-Handler für Items
     container.querySelectorAll('.command-palette-item').forEach(item => {
       item.addEventListener('click', () => {
         this.selectedIndex = parseInt(item.dataset.index);
@@ -225,9 +194,6 @@ class CommandPalette {
     });
   }
 
-  /**
-   * Commands nach Kategorie gruppieren
-   */
   groupByCategory(commands) {
     return commands.reduce((acc, cmd) => {
       const category = cmd.category || 'default';
@@ -237,34 +203,21 @@ class CommandPalette {
     }, {});
   }
 
-  /**
-   * Highlight Suchbegriff
-   */
   highlightMatch(text) {
     if (!this.searchTerm) return text;
-    
     const regex = new RegExp(`(${this.searchTerm})`, 'gi');
     return text.replace(regex, '<mark>$1</mark>');
   }
 
-  /**
-   * Scroll zu ausgewähltem Item
-   */
   scrollToSelected() {
     const container = document.querySelector('.command-palette-results');
     const selected = container.querySelector('.command-palette-item.selected');
     
     if (selected) {
-      selected.scrollIntoView({ 
-        block: 'nearest', 
-        behavior: 'smooth' 
-      });
+      selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }
 
-  /**
-   * Ausgewählten Command ausführen
-   */
   executeSelected() {
     const cmd = this.filteredCommands[this.selectedIndex];
     if (!cmd) return;
@@ -276,30 +229,22 @@ class CommandPalette {
         try {
           cmd.action();
         } catch (error) {
-          console.error('[CommandPalette] Fehler beim Ausführen:', error);
+          console.error('[CommandPalette] Error:', error);
         }
       }, 100);
     }
   }
 }
 
-// ============================================================================
-// COMMAND DEFINITIONS
-// ============================================================================
-
-/**
- * Standard Commands für AI Prompt Manager
- */
 const DEFAULT_COMMANDS = [
-  // Navigation
   {
-    id: 'nav-megaprompt',
-    label: 'Go to Megaprompt',
-    description: 'Switch to Megaprompt canvas',
+    id: 'nav-canvas',
+    label: 'Go to Canvas',
+    description: 'Switch to Canvas view',
     category: 'Navigation',
     icon: '📝',
-    keywords: ['canvas', 'compose'],
-    action: () => switchTab('megaprompt')
+    keywords: ['megaprompt', 'compose'],
+    action: () => window.switchTab('canvas')
   },
   {
     id: 'nav-prompts',
@@ -308,26 +253,8 @@ const DEFAULT_COMMANDS = [
     category: 'Navigation',
     icon: '📋',
     keywords: ['list', 'library'],
-    action: () => switchTab('prompts')
+    action: () => window.switchTab('prompts')
   },
-  {
-    id: 'nav-categories',
-    label: 'Go to Categories',
-    description: 'Manage categories',
-    category: 'Navigation',
-    icon: '📁',
-    action: () => switchTab('categories')
-  },
-  {
-    id: 'nav-tags',
-    label: 'Go to Tags',
-    description: 'Manage tags and profiles',
-    category: 'Navigation',
-    icon: '🏷️',
-    action: () => switchTab('tags')
-  },
-
-  // Actions
   {
     id: 'action-new-prompt',
     label: 'New Prompt',
@@ -336,40 +263,18 @@ const DEFAULT_COMMANDS = [
     icon: '➕',
     shortcut: 'Ctrl+N',
     keywords: ['create', 'add'],
-    action: () => openPromptModal()
-  },
-  {
-    id: 'action-add-to-canvas',
-    label: 'Add to Canvas',
-    description: 'Add prompts to Megaprompt canvas',
-    category: 'Actions',
-    icon: '📝',
-    keywords: ['megaprompt', 'compose'],
-    action: () => {
-      switchTab('megaprompt');
-      // Automatisch Insert Modal öffnen
-      setTimeout(() => document.getElementById('btn-insert-megaprompt')?.click(), 200);
-    }
+    action: () => window.openPromptModal()
   },
   {
     id: 'action-copy-canvas',
     label: 'Copy Canvas to Clipboard',
-    description: 'Copy current Megaprompt to clipboard',
+    description: 'Copy current canvas',
     category: 'Actions',
     icon: '📋',
     shortcut: 'Ctrl+C',
     keywords: ['clipboard'],
-    action: () => {
-      if (currentView === 'megaprompt') {
-        copyMegaprompt();
-      } else {
-        switchTab('megaprompt');
-        setTimeout(() => copyMegaprompt(), 200);
-      }
-    }
+    action: () => window.copyCanvas()
   },
-
-  // Create
   {
     id: 'create-category',
     label: 'New Category',
@@ -377,7 +282,7 @@ const DEFAULT_COMMANDS = [
     category: 'Create',
     icon: '📁',
     keywords: ['folder', 'organize'],
-    action: () => openCategoryModal()
+    action: () => window.openCategoryModal()
   },
   {
     id: 'create-tag',
@@ -386,33 +291,7 @@ const DEFAULT_COMMANDS = [
     category: 'Create',
     icon: '🏷️',
     keywords: ['label'],
-    action: () => openTagModal(false)
-  },
-  {
-    id: 'create-profile',
-    label: 'New Profile',
-    description: 'Create a new profile for auto-filter',
-    category: 'Create',
-    icon: '👤',
-    keywords: ['auto-filter', 'context'],
-    action: () => openTagModal(true)
-  },
-
-  // Settings
-  {
-    id: 'toggle-auto-filter',
-    label: 'Toggle Auto-Filter',
-    description: 'Enable/disable profile-based filtering',
-    category: 'Settings',
-    icon: '🔍',
-    keywords: ['profile', 'filter'],
-    action: () => {
-      const toggle = document.getElementById('auto-filter-toggle');
-      if (toggle) {
-        toggle.checked = !toggle.checked;
-        toggle.dispatchEvent(new Event('change'));
-      }
-    }
+    action: () => window.openTagModal(false)
   },
   {
     id: 'toggle-wide-mode',
@@ -421,16 +300,7 @@ const DEFAULT_COMMANDS = [
     category: 'Settings',
     icon: '↔️',
     keywords: ['layout', 'width'],
-    action: () => toggleWideMode()
-  },
-  {
-    id: 'toggle-density',
-    label: 'Toggle Density',
-    description: 'Switch between comfort and compact mode',
-    category: 'Settings',
-    icon: '📐',
-    keywords: ['spacing', 'compact'],
-    action: () => toggleDensity()
+    action: () => window.toggleWideMode && window.toggleWideMode()
   },
   {
     id: 'open-settings',
@@ -439,27 +309,10 @@ const DEFAULT_COMMANDS = [
     category: 'Settings',
     icon: '⚙️',
     keywords: ['preferences', 'export', 'import'],
-    action: () => openSettingsModal()
-  },
-
-  // Help
-  {
-    id: 'show-shortcuts',
-    label: 'Show Keyboard Shortcuts',
-    description: 'View all keyboard shortcuts',
-    category: 'Help',
-    icon: '⌨️',
-    shortcut: '?',
-    keywords: ['help', 'keys'],
-    action: () => {
-      if (typeof shortcuts !== 'undefined' && shortcuts.toggleOverlay) {
-        shortcuts.toggleOverlay();
-      }
-    }
+    action: () => window.openSettingsModal()
   }
 ];
 
-// Export
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { CommandPalette, DEFAULT_COMMANDS };
 }

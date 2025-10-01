@@ -1,0 +1,183 @@
+# AI Prompt Manager - Vollständige Dateistruktur
+
+## 📁 Projektstruktur
+
+```
+ai-prompt-manager/
+├── manifest.json
+├── background.js
+├── README.md
+├── installation_guide.md
+├── popup/
+│   ├── popup.html
+│   ├── popup.js
+│   └── popup.css
+├── content/
+│   ├── content.js
+│   └── content.css
+├── core/
+│   ├── dataModel.js
+│   ├── storage.js
+│   ├── megaprompt.js
+│   ├── exportImport.js
+│   ├── bulkOperations.js
+│   ├── autoFilter.js
+│   ├── keyboardShortcuts.js
+│   ├── commandPalette.js
+│   ├── usabilityFeatures.js
+│   ├── templateManager.js
+│   ├── megadraftManager.js
+│   └── defaultProfiles.js
+└── assets/
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png
+```
+
+## 🚀 Installation
+
+### Schritt 1: Ordner erstellen
+Erstellen Sie einen Ordner `ai-prompt-manager` auf Ihrem Computer.
+
+### Schritt 2: Dateien kopieren
+
+#### Root-Dateien:
+- `manifest.json` (aus Document 3)
+- `background.js` (aus Document 1)
+- `README.md` (aus Document 4)
+- `installation_guide.md` (aus Document 2)
+
+#### popup/ Ordner:
+- `popup.html` (aus Document 6)
+- `popup.js` (aus Document 7) 
+- `popup.css` (aus Document 5)
+
+#### content/ Ordner:
+- `content.js` (aus Document 21)
+- `content.css` (aus Document 20)
+
+#### core/ Ordner:
+- `dataModel.js` (aus Document 11)
+- `storage.js` (aus Document 17)
+- `megaprompt.js` (aus Document 16)
+- `exportImport.js` (aus Document 13)
+- `bulkOperations.js` (aus Document 9)
+- `autoFilter.js` (aus Document 8)
+- `keyboardShortcuts.js` (aus Document 14)
+- `commandPalette.js` (aus Document 10)
+- `usabilityFeatures.js` (aus Document 19)
+- `templateManager.js` (aus Document 18)
+- `megadraftManager.js` (aus Document 15)
+- `defaultProfiles.js` (aus Document 12)
+
+#### assets/ Ordner:
+Erstellen Sie Platzhalter-Icons oder verwenden Sie:
+- https://www.favicon-generator.org/
+- https://www.flaticon.com
+
+Benötigte Größen: 16x16, 48x48, 128x128 px
+
+### Schritt 3: In Browser laden
+
+**Chrome:**
+1. `chrome://extensions/` öffnen
+2. "Entwicklermodus" aktivieren
+3. "Entpackte Erweiterung laden"
+4. `ai-prompt-manager/` Ordner auswählen
+
+**Firefox:**
+1. `about:debugging#/runtime/this-firefox` öffnen
+2. "Temporäres Add-on laden"
+3. `manifest.json` auswählen
+
+## 📝 Wichtige Hinweise
+
+### popup.js Zusammenführung
+Die popup.js wurde im Chat vollständig aktualisiert. Verwenden Sie die Version aus dem letzten Artifact (Document 7 + alle Updates).
+
+### Fehlende Icons
+Falls Icons fehlen, können Sie diese Zeilen in manifest.json temporär auskommentieren:
+```json
+// "action": {
+//   "default_popup": "popup/popup.html",
+//   "default_icon": {
+//     "16": "assets/icon16.png",
+//     "48": "assets/icon48.png",
+//     "128": "assets/icon128.png"
+//   }
+// },
+```
+
+Und ersetzen durch:
+```json
+"action": {
+  "default_popup": "popup/popup.html"
+},
+```
+
+## ✅ Funktionalitätsprüfung
+
+Nach der Installation testen Sie:
+
+1. **Canvas View** (Standard-Tab)
+   - New Draft erstellen
+   - Add Part funktioniert
+   - Canvas Options öffnet Modal
+   - Copy to Clipboard funktioniert
+   - Copy Minified funktioniert
+
+2. **Prompts View**
+   - New Prompt erstellen
+   - Edit/Delete funktioniert
+   - Copy Button pro Prompt funktioniert
+   - Search funktioniert
+
+3. **Templates View**
+   - Built-in Templates (CRISE, CRAFT, TAG) verwendbar
+   - "+ Custom Template" öffnet Modal
+   - Custom Template erstellen/bearbeiten/löschen
+
+4. **Categories & Tags**
+   - Neue Kategorie erstellen
+   - Neuer Tag erstellen
+   - Neues Profil erstellen
+
+5. **Settings**
+   - Export funktioniert
+   - Import funktioniert
+   - Backups anzeigen
+
+6. **Quick Sets**
+   - Save Quick Set (unter Canvas)
+   - Load Quick Set funktioniert
+
+## 🐛 Bekannte Probleme & Lösungen
+
+### Problem: Extension lädt nicht
+**Lösung:** Console öffnen (`chrome://extensions/` → Details → "Fehler") und Syntaxfehler prüfen.
+
+### Problem: Buttons reagieren nicht
+**Lösung:** Browser-Console öffnen (F12) und auf JavaScript-Fehler prüfen.
+
+### Problem: Storage funktioniert nicht
+**Lösung:** In `chrome://extensions/` prüfen, ob "storage" Permission aktiviert ist.
+
+## 📚 Dokumentation
+
+Vollständige Dokumentation in:
+- `README.md` - Feature-Übersicht
+- `installation_guide.md` - Detaillierte Installation
+
+## 🔧 Entwickler-Modus
+
+Für Debugging:
+1. `chrome://extensions/` → Extension Details
+2. "Hintergrundseite untersuchen" (Service Worker)
+3. Bei Popup: Rechtsklick auf Extension → "Untersuchen"
+
+## 🎯 Nächste Schritte
+
+1. **Slice 5 P2:** Inline Variables implementieren
+2. **Variable Packs:** CRUD-Funktionen
+3. **Command Palette:** Vollständig integrieren
+4. **Tests:** Automatisierte Tests schreiben

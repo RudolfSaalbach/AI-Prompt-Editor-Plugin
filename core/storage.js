@@ -1,70 +1,49 @@
 /**
- * Storage-Abstraktionsschicht
- * Vereinfachter Zugriff auf chrome.storage.local / browser.storage.local
+ * Storage Manager - Complete with Variable Packs
  */
 
 class StorageManager {
   constructor() {
-    // Cross-Browser Kompatibilität
     this.storage = (typeof browser !== 'undefined' ? browser : chrome).storage.local;
     this.STORAGE_KEY = 'aiPromptManager_data';
   }
 
-  /**
-   * Lädt alle Daten aus dem Storage
-   * @returns {Promise<Object>} Datenstruktur
-   */
   async load() {
     try {
       const result = await this.storage.get(this.STORAGE_KEY);
       const data = result[this.STORAGE_KEY];
       
-      // Validierung und Fallback
       if (data && DataModel.validate(data)) {
+        if (!data.drafts) data.drafts = [];
+        if (!data.templates) data.templates = [];
+        if (!data.variablePacks) data.variablePacks = [];
         return data;
       }
       
       return DataModel.createEmpty();
     } catch (error) {
-      console.error('Storage-Fehler beim Laden:', error);
+      console.error('[Storage] Load error:', error);
       return DataModel.createEmpty();
     }
   }
 
-  /**
-   * Speichert Daten im Storage
-   * @param {Object} data - Zu speichernde Datenstruktur
-   * @returns {Promise<void>}
-   */
   async save(data) {
     try {
       if (!DataModel.validate(data)) {
-        throw new Error('Ungültige Datenstruktur');
+        throw new Error('Invalid data structure');
       }
-      
       await this.storage.set({ [this.STORAGE_KEY]: data });
     } catch (error) {
-      console.error('Storage-Fehler beim Speichern:', error);
+      console.error('[Storage] Save error:', error);
       throw error;
     }
   }
 
-  /**
-   * Löscht alle Daten (mit Sicherheitsabfrage im UI)
-   * @returns {Promise<void>}
-   */
   async clear() {
-    try {
-      await this.storage.remove(this.STORAGE_KEY);
-    } catch (error) {
-      console.error('Storage-Fehler beim Löschen:', error);
-      throw error;
-    }
+    await this.storage.remove(this.STORAGE_KEY);
   }
 
-  /**
-   * CRUD-Operationen für Kategorien
-   */
+  // Categories
   async addCategory(name, color) {
     const data = await this.load();
     const category = DataModel.createCategory(name, color);
@@ -76,9 +55,7 @@ class StorageManager {
   async updateCategory(id, updates) {
     const data = await this.load();
     const index = data.categories.findIndex(c => c.id === id);
-    
-    if (index === -1) throw new Error('Kategorie nicht gefunden');
-    
+    if (index === -1) throw new Error('Category not found');
     data.categories[index] = { ...data.categories[index], ...updates };
     await this.save(data);
     return data.categories[index];
@@ -86,22 +63,15 @@ class StorageManager {
 
   async deleteCategory(id) {
     const data = await this.load();
-    
-    // Prompts von dieser Kategorie lösen
-    data.prompts.forEach(p => {
-      if (p.categoryId === id) p.categoryId = null;
-    });
-    
+    data.prompts.forEach(p => { if (p.categoryId === id) p.categoryId = null; });
     data.categories = data.categories.filter(c => c.id !== id);
     await this.save(data);
   }
 
-  /**
-   * CRUD-Operationen für Tags
-   */
-  async addTag(name, color) {
+  // Tags
+  async addTag(name, color, isProfile = false) {
     const data = await this.load();
-    const tag = DataModel.createTag(name, color);
+    const tag = DataModel.createTag(name, color, isProfile);
     data.tags.push(tag);
     await this.save(data);
     return tag;
@@ -110,9 +80,7 @@ class StorageManager {
   async updateTag(id, updates) {
     const data = await this.load();
     const index = data.tags.findIndex(t => t.id === id);
-    
-    if (index === -1) throw new Error('Tag nicht gefunden');
-    
+    if (index === -1) throw new Error('Tag not found');
     data.tags[index] = { ...data.tags[index], ...updates };
     await this.save(data);
     return data.tags[index];
@@ -120,19 +88,12 @@ class StorageManager {
 
   async deleteTag(id) {
     const data = await this.load();
-    
-    // Tag aus allen Prompts entfernen
-    data.prompts.forEach(p => {
-      p.tagIds = p.tagIds.filter(tid => tid !== id);
-    });
-    
+    data.prompts.forEach(p => { p.tagIds = p.tagIds.filter(tid => tid !== id); });
     data.tags = data.tags.filter(t => t.id !== id);
     await this.save(data);
   }
 
-  /**
-   * CRUD-Operationen für Prompts
-   */
+  // Prompts
   async addPrompt(promptData) {
     const data = await this.load();
     const prompt = DataModel.createPrompt(promptData);
@@ -144,15 +105,12 @@ class StorageManager {
   async updatePrompt(id, updates) {
     const data = await this.load();
     const index = data.prompts.findIndex(p => p.id === id);
-    
-    if (index === -1) throw new Error('Prompt nicht gefunden');
-    
+    if (index === -1) throw new Error('Prompt not found');
     data.prompts[index] = {
       ...data.prompts[index],
       ...updates,
       modified: new Date().toISOString()
     };
-    
     await this.save(data);
     return data.prompts[index];
   }
@@ -168,96 +126,115 @@ class StorageManager {
     data.prompts = data.prompts.filter(p => !ids.includes(p.id));
     await this.save(data);
   }
-  
-  /**
-   * SLICE 4: Draft CRUD operations
-   */
+
+  // Drafts
   async saveDraft(draft) {
     const data = await this.load();
-  
-    if (!data.drafts) {
-      data.drafts = [];
-    }
-  
+    if (!data.drafts) data.drafts = [];
+    
     const index = data.drafts.findIndex(d => d.id === draft.id);
-  
     if (index === -1) {
       data.drafts.push(draft);
     } else {
       data.drafts[index] = draft;
     }
-  
+    
     await this.save(data);
     return draft;
   }
-  
+
   async loadDraft(draftId) {
     const data = await this.load();
-  
-    if (!data.drafts) {
-      return null;
-    }
-  
-    return data.drafts.find(d => d.id === draftId) || null;
+    return data.drafts?.find(d => d.id === draftId) || null;
   }
-  
+
   async loadAllDrafts() {
     const data = await this.load();
     return data.drafts || [];
   }
-  
+
   async deleteDraft(draftId) {
     const data = await this.load();
-  
-    if (!data.drafts) {
-      return;
+    if (data.drafts) {
+      data.drafts = data.drafts.filter(d => d.id !== draftId);
+      await this.save(data);
     }
-  
-    data.drafts = data.drafts.filter(d => d.id !== draftId);
-    await this.save(data);
   }
-  
-  /**
-   * SLICE 4: Template CRUD operations
-   */
+
+  // Templates
   async saveTemplate(template) {
     const data = await this.load();
-  
-    if (!data.templates) {
-      data.templates = [];
-    }
-  
+    if (!data.templates) data.templates = [];
+    
     const index = data.templates.findIndex(t => t.id === template.id);
-  
     if (index === -1) {
       data.templates.push(template);
     } else {
       data.templates[index] = template;
     }
-  
+    
     await this.save(data);
     return template;
   }
-  
+
   async loadAllTemplates() {
     const data = await this.load();
     return data.templates || [];
   }
-  
+
   async deleteTemplate(templateId) {
     const data = await this.load();
-  
-    if (!data.templates) {
-      return;
+    if (data.templates) {
+      data.templates = data.templates.filter(t => t.id !== templateId);
+      await this.save(data);
     }
-  
-    data.templates = data.templates.filter(t => t.id !== templateId);
-    await this.save(data);
-  }  
+  }
+
+  // Variable Packs
+  async saveVariablePack(pack) {
+    const data = await this.load();
+    if (!data.variablePacks) data.variablePacks = [];
     
+    const index = data.variablePacks.findIndex(p => p.id === pack.id);
+    if (index === -1) {
+      data.variablePacks.push(pack);
+    } else {
+      data.variablePacks[index] = pack;
+    }
+    
+    await this.save(data);
+    return pack;
+  }
+
+  async loadAllVariablePacks() {
+    const data = await this.load();
+    return data.variablePacks || [];
+  }
+
+  async deleteVariablePack(packId) {
+    const data = await this.load();
+    if (data.variablePacks) {
+      data.variablePacks = data.variablePacks.filter(p => p.id !== packId);
+      await this.save(data);
+    }
+  }
+
+  // Backups
+  async loadBackups() {
+    const allData = await this.storage.get(null);
+    const backups = Object.keys(allData)
+      .filter(key => key.startsWith('aiPromptManager_backup_'))
+      .map(key => ({
+        key: key,
+        timestamp: allData[key].timestamp,
+        date: allData[key].date,
+        size: JSON.stringify(allData[key].data).length
+      }))
+      .sort((a, b) => b.timestamp - a.timestamp);
+    return backups;
+  }
 }
 
-// Export
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = StorageManager;
 }
